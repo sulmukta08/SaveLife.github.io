@@ -1,0 +1,120 @@
+// Navigation buttons
+const navButtons = document.querySelectorAll('.nav-btn');
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    showSection(btn.dataset.target);
+  });
+});
+
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => {
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+}
+
+// LocalStorage key
+const STORAGE_KEY = 'donorsData';
+
+// Register Form
+const registerForm = document.getElementById('registerForm');
+const registerMsg = document.getElementById('registerMsg');
+
+registerForm.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const donor = {
+    name: document.getElementById('name').value.trim(),
+    age: document.getElementById('age').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    bloodGroup: document.getElementById('bloodGroup').value
+  };
+
+  let donors = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  donors.push(donor);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(donors));
+
+  registerMsg.textContent = "Thank you for registering as a donor!";
+  registerForm.reset();
+
+  setTimeout(() => { registerMsg.textContent = ''; }, 4000);
+});
+
+// Search Donors
+const searchBtn = document.getElementById('searchBtn');
+const searchResults = document.getElementById('searchResults');
+const searchMsg = document.getElementById('searchMsg');
+
+searchBtn.addEventListener('click', () => {
+  const bloodGroup = document.getElementById('searchBloodGroup').value;
+  if (!bloodGroup) {
+    searchMsg.textContent = "Please select a blood group to search.";
+    searchResults.innerHTML = '';
+    return;
+  }
+  searchMsg.textContent = '';
+
+  let donors = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  const filtered = donors.filter(d => d.bloodGroup === bloodGroup);
+
+  if (filtered.length === 0) {
+    searchResults.innerHTML = '<tr><td colspan="5">No donors found for selected blood group.</td></tr>';
+    return;
+  }
+
+  searchResults.innerHTML = filtered.map(d => `
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.age}</td>
+      <td>${d.phone}</td>
+      <td>${d.location}</td>
+      <td>${d.bloodGroup}</td>
+    </tr>
+  `).join('');
+});
+
+// Admin Panel
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+const adminContent = document.getElementById('adminContent');
+const adminTableBody = document.getElementById('adminTableBody');
+const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+
+const ADMIN_PASSWORD = 'admin123'; // Change this
+
+adminLoginBtn.addEventListener('click', () => {
+  const pass = prompt('Enter admin password:');
+  if (pass === ADMIN_PASSWORD) {
+    adminLoginBtn.style.display = 'none';
+    adminContent.style.display = 'block';
+    showDonorsInAdmin();
+  } else {
+    alert('Wrong password!');
+  }
+});
+
+adminLogoutBtn.addEventListener('click', () => {
+  adminLoginBtn.style.display = 'inline-block';
+  adminContent.style.display = 'none';
+  adminTableBody.innerHTML = '';
+});
+
+function showDonorsInAdmin() {
+  let donors = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  if (donors.length === 0) {
+    adminTableBody.innerHTML = '<tr><td colspan="5">No donors registered yet.</td></tr>';
+    return;
+  }
+
+  adminTableBody.innerHTML = donors.map(d => `
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.age}</td>
+      <td>${d.phone}</td>
+      <td>${d.location}</td>
+      <td>${d.bloodGroup}</td>
+    </tr>
+  `).join('');
+}
